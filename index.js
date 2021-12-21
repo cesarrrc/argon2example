@@ -1,7 +1,11 @@
 require("dotenv").config();
-const argon2 = require("argon2");
 const express = require("express");
+const argon2 = require("argon2");
+const jwt = require("jsonwebtoken")
 const { connection } = require("./sql/connection");
+const jwtSecret = process.env.JWT
+const {checkJwt} = require('./utils/checkJwt')
+
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -12,7 +16,7 @@ app.get("/", (req, res) => {
   res.json("hello world");
 });
 
-app.get("/users", (req, res) => {
+app.get("/users", checkJwt, (req, res) => {
   console.log("in GET /users route");
   let sql = `SELECT * FROM users`;
   connection.query(sql, (err, rows) => {
@@ -50,12 +54,17 @@ app.post("/login", async (req, res) => {
       console.log(err);
     }
     const hash = rows[0].user_password;
-    console.log(rows);
+    console.log(rows[0].user_password);
     console.log(hash);
     if (!argon2.verify(hash, user_password)) {
       res.status(401).send('your password does not match')
     } else {
-      res.send('your password is a match!')
+      const unsignedToken = {
+        user_name: rows[0].user_name,
+        user_id: rows[0].user_id
+      }
+      const token = jwt.sign(unsignedToken, jwtSecret)
+      res.json({token})
     }
   });
 });
