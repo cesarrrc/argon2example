@@ -2,15 +2,16 @@ require("dotenv").config();
 const express = require("express");
 const argon2 = require("argon2");
 const jwt = require("jsonwebtoken")
+
 const { connection } = require("./sql/connection");
-const jwtSecret = process.env.JWT
-const {checkJwt} = require('./utils/checkJwt')
+const { checkJwt } = require('./utils/checkJwt')
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
+const jwtSecret = process.env.JWT
 const port = process.env.PORT || 3330;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.json("hello world");
